@@ -1,0 +1,43 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[polish]{babel}
+\usepackage{tikz}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+\title{Plan Projektu - MVP}
+\author{Tymon Tumialis}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Opis Architektury}
+
+Po przeprowadzeniu analizy (researchu) opracowaliśmy architekturę naszego rozwiązania.
+
+Do statycznej analizy kodu wykorzystamy narzędzie Semgrep z własnymi, zdefiniowanymi antywzorcami oraz przypisanymi do nich kosztami. 
+
+Antywzorce będą przechowywane w pliku YAML. Semgrep przeanalizuje kod użytkownika, a następnie zidentyfikuje i zwróci wszystkie wychwycone antywzorce w pliku JSON. Wynik ten zostanie odczytany przez skrypt w języku Python, którego zadaniem będzie obliczenie sumarycznego kosztu i podjęcie decyzji o ewentualnym uruchomieniu zadania.
+
+W przypadku monitoringu dynamicznego zamierzamy wykorzystać Prolog i Epilog w systemie Slurm, slurmDB, bazę PostgreSQL z rozszerzeniem TimescaleDB oraz środowisko Grafana OS. Schemat architektury przedstawiono poniżej:
+
+\vspace{1cm}
+\begin{center}
+\begin{tikzpicture}[node distance=2cm, auto]
+  \node[draw, rectangle, fill=blue!10, text width=3.5cm, text centered, minimum height=1.5cm, rounded corners] (slurm) {\textbf{SLURM}\\ Prolog i Epilog};
+  \node[draw, rectangle, fill=green!10, text width=3.5cm, text centered, minimum height=1.5cm, rounded corners, right of=slurm, node distance=5.5cm] (db) {\textbf{PostgreSQL} \\+ TimescaleDB};
+  \node[draw, rectangle, fill=orange!10, text width=3.5cm, text centered, minimum height=1.5cm, rounded corners, right of=db, node distance=5.5cm] (grafana) {\textbf{Grafana OS}};
+
+  \draw[->, thick, >=stealth] (slurm) -- (db);
+  \draw[->, thick, >=stealth] (db) -- (grafana);
+\end{tikzpicture}
+\end{center}
+\vspace{1cm}
+
+Monitoring dynamiczny zamierzamy początkowo przetestować w środowisku testowym (sandbox), aby zyskać pewność, że nasze rozwiązanie jest bezpieczne, wydajne i działa poprawnie.
+
+\end{document}

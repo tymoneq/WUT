@@ -97,21 +97,21 @@ int main()
         std::cout << word << ": " << wordCountSTL[word] << std::endl;
     }
     std::cout << "------------------PART 1, 2 and 3------------------" << std::endl;
-//    Dictionary<std::string, int> wordCountTemplated;
-//    for (auto& word : words)
-//    {
-//    	wordCountTemplated[word]++;
-//    }
-//    for (auto& word : chosenWords)
-//    {
-//    	std::cout << word << ": " << wordCountTemplated[word] << std::endl;
-//    }
-//    std::cout << "Dictionary for mapping numbers and number english names:" << std::endl;
-//    Dictionary<int, std::string> numbersEnglishNames;
-//    numbersEnglishNames.insert(1, "one");
-//    numbersEnglishNames.insert(2, "two");
-//    numbersEnglishNames.insert(100, "hundred");
-//    std::cout << numbersEnglishNames << std::endl;
+    Dictionary<std::string, int> wordCountTemplated;
+    for (auto& word : words)
+    {
+    	wordCountTemplated[word]++;
+    }
+    for (auto& word : chosenWords)
+    {
+    	std::cout << word << ": " << wordCountTemplated[word] << std::endl;
+    }
+    std::cout << "Dictionary for mapping numbers and number english names:" << std::endl;
+    Dictionary<int, std::string> numbersEnglishNames;
+    numbersEnglishNames.insert(1, "one");
+    numbersEnglishNames.insert(2, "two");
+    numbersEnglishNames.insert(100, "hundred");
+    std::cout << numbersEnglishNames << std::endl;
     std::cout << "------------------PART 4------------------" << std::endl;
 //    std::cout << numbersEnglishNames << std::endl;
 

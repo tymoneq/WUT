@@ -4,7 +4,7 @@ function [T7_7, T8_8] = romberg(f, a, b)
     % a,b = granice przedziały
     % f = funkcja 
     % T7_7 i T8_8 = wartości kwadratury
-    n = 8;
+    n = 9;
 
     R = zeros(n,n);
     R(1,1) = (b-a)/2 * (f(a) + f(b));
@@ -13,10 +13,11 @@ function [T7_7, T8_8] = romberg(f, a, b)
     power_of_two = 2;
     for k = 2:n
         h = (b - a) / power_of_two;
-        sum_f = 0;
-        for j = 1:power_of_two/2
-            sum_f = sum_f + f(a + (2*j - 1) * h);
-        end
+        
+        j_vec = 1:(power_of_two/2);           
+        wezly = a + (2*j_vec - 1) * h;        
+        sum_f = sum(f(wezly));                
+       
         R(k, 1) = 0.5 * R(k-1, 1) + h * sum_f;
         power_of_two = power_of_two * 2;
     end
@@ -30,7 +31,7 @@ function [T7_7, T8_8] = romberg(f, a, b)
         power_of_four = power_of_four * 4;
     
     end
-    T7_7 = R(7,7);
-    T8_8 = R(8,8);
+    T7_7 = R(8,8);
+    T8_8 = R(9,9);
     
 end % function

@@ -24,10 +24,15 @@ public:
   ~Dictionary();
 
   V &operator[](const K &key);
+  template <typename _K, typename _V, int _Capacity>
+  friend Dictionary<_K, _V, _Capacity>
+  operator+(const Dictionary<_K, _V, _Capacity> &d1,
+            const Dictionary<_K, _V, _Capacity> &d2);
 
   void insert(const K &key, const V &value);
   std::optional<V> get(const K &key) const;
   bool remove(const K &key);
+  Dictionary intersect(const Dictionary &other) const;
 
   template <typename _K, typename _V, int _Capacity>
   friend std::ostream &operator<<(std::ostream &os,
@@ -153,4 +158,48 @@ bool Dictionary<K, V, Capacity>::remove(const K &key) {
   }
 
   return false;
+}
+
+template <typename K, typename V, int Capacity>
+
+inline Dictionary<K, V, Capacity>
+Dictionary<K, V, Capacity>::intersect(const Dictionary &other) const {
+
+  Dictionary d;
+  for (int i = 0; i < Capacity; ++i) {
+    KeyValuePair<K, V> *entry = other.table[i];
+    while (entry) {
+      auto value = get(entry->key);
+      if (value.has_value())
+        d.insert(entry->key, value.value());
+      entry = entry->next;
+    }
+  }
+  return d;
+}
+
+template <typename K, typename V, int Capacity>
+Dictionary<K, V, Capacity> operator+(const Dictionary<K, V, Capacity> &d1,
+                                     const Dictionary<K, V, Capacity> &d2) {
+
+  Dictionary<K, V, Capacity> d;
+
+  for (size_t i = 0; i < Capacity; i++) {
+    KeyValuePair<K, V> *entry = d1.table[i];
+    while (entry) {
+      d.insert(entry->key, entry->value);
+      entry = entry->next;
+    }
+  }
+  for (size_t i = 0; i < Capacity; i++) {
+    KeyValuePair<K, V> *entry = d2.table[i];
+    while (entry) {
+      auto value = d.get(entry->key);
+      if (!value.has_value())
+        d.insert(entry->key, entry->value);
+      entry = entry->next;
+    }
+  }
+
+  return d;
 }

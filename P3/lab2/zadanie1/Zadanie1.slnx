@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="zadanie1.App/zadanie1.App.csproj" />
   <Project Path="zadanie1.lib/zadanie1.lib.csproj" />
+  <Project Path="zadanie1.Test/zadanie1.Test.csproj" />
 </Solution>

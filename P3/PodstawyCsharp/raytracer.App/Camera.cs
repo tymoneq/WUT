@@ -69,7 +69,7 @@ public class Camera
     {
         _imageHeight = (int)(ImageWidth / AspectRatio);
 
-        if (_imageHeight < 1) 
+        if (_imageHeight < 1)
         {
             _imageHeight = 1;
         }
@@ -92,10 +92,30 @@ public class Camera
 
         Vec3 viewportUpperLeft = Position - (distanceToViewport * w) - viewportU / 2.0f - viewportV / 2.0f;
         _viewportCorner = viewportUpperLeft + 0.5f * (_pixelDu + _pixelDv);
-
-
-
-
     }
 
+    public Image Render(IHittable world)
+    {
+        Image image = new Image(_imageWidth, _imageHeight);
+        for (int w = 0; w < _imageWidth; w++)
+        {
+            for (int h = 0; h < _imageHeight; h++)
+            {
+                Vec3 pixelCenter = _viewportCorner + (w * _pixelDu) + (h * _pixelDv);
+                Vec3 rayDirection = pixelCenter - Position;
+                Ray ray = new Ray(Position, rayDirection);
+
+                if (world.Hit(ray, 0.001f, float.PositiveInfinity, out HitInfo hitInfo))
+                {
+                    image[w, h] = new Vec3(1, 0, 0); 
+                }
+                else
+                {
+                    image[w, h] = new Vec3(0, 0, 0); 
+                }
+            }
+        }
+
+        return image;
+    }
 }

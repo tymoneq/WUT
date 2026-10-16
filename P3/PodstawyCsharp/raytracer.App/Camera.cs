@@ -8,6 +8,8 @@ public class Camera
     private Vec3 _target = new Vec3(0, 0, -1);
     private float _fov = 90.0f;
 
+    public int MaxDepth { get; set; } = 50;
+
     private int _imageHeight;
     private Vec3 _pixelDu;
     private Vec3 _pixelDv;
@@ -105,17 +107,35 @@ public class Camera
                 Vec3 rayDirection = pixelCenter - Position;
                 Ray ray = new Ray(Position, rayDirection);
 
-                if (world.Hit(ray, 0.001f, float.PositiveInfinity, out HitInfo hitInfo))
-                {
-                    image[w, h] = new Vec3(1, 0, 0); 
-                }
-                else
-                {
-                    image[w, h] = new Vec3(0, 0, 0); 
-                }
+                image[w, h] = RayColor(ray, MaxDepth, world);
             }
         }
 
         return image;
     }
+
+    private Vec3 RayColor(Ray ray, int depth, IHittable world)
+    {
+        if (depth <= 0)
+        {
+            return new Vec3(0, 0, 0);
+        }
+
+        if (world.Hit(ray, 0.001f, float.PositiveInfinity, out HitInfo hitInfo))
+        {
+            Vec3 emitted = hitInfo.Mat?.Emit() ?? new Vec3(0, 0, 0);
+            if (hitInfo.Mat != null && hitInfo.Mat.Scatter(in ray, ref hitInfo, out Vec3 attenuation, out Ray scattered))
+            {
+                return emitted + attenuation * RayColor(scattered, depth - 1, world);
+            }
+            return emitted;
+
+        }
+        else
+        {
+            return new Vec3(0, 0, 0); 
+        }
+    }
+
+
 }

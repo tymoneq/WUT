@@ -20,8 +20,14 @@ class Program()
 
 
         Scene world = new Scene();
-        world.Add(new Sphere(new Vec3(0, 0, -1), 0.5f));
-        world.Add(new Plane(new Vec3(0, -0.5f, 0), new Vec3(0, 1, 0)));
+        // Add a sky sphere
+        world.Add(new Sphere(new Vec3(0, 0, 0), 1000.0f, new EmissiveMaterial(new Vec3(0.5f, 0.7f, 1.0f))));
+
+        // Add a sphere
+        world.Add(new Sphere(new Vec3(0, 0, -1), 0.5f, new EmissiveMaterial(new Vec3(1, 0, 0)))); 
+        
+        // Add a ground plane
+        world.Add(new Plane(new Vec3(0, -0.5f, 0), new Vec3(0, 1, 0), new EmissiveMaterial(new Vec3(1, 1, 1))));
 
         Camera cam = new Camera();
         cam.Position = new Vec3(0, 0, 1);

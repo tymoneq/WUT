@@ -6,6 +6,7 @@ public struct HitInfo
     public Vec3 Normal;
     public float T;
     public bool FrontFace;
+    public Material Mat;
 
 
     public void SetFaceNormal(Ray r, Vec3 outwardNormal)

@@ -30,7 +30,7 @@ public class Image
     public override string ToString()
     {
         StringBuilder result = new StringBuilder();
-        result.Append("P3");
+        result.AppendLine("P3");
         result.AppendLine($"{Width} {Height}");
         result.AppendLine("255");
 

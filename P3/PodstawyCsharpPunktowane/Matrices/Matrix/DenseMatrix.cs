@@ -74,5 +74,11 @@ public class DenseMatrix : Matrix
 
         return res;
     }
+
+    protected override Matrix GetInstance(int row, int col)
+    {
+        DenseMatrix res = new DenseMatrix(row, col);
+        return res;
+    }
 }
 

@@ -75,4 +75,10 @@ public class SparseMatrix : Matrix
         res = MathF.Sqrt(res);
         return res;
     }
+
+     protected override Matrix GetInstance(int row, int col)
+    {
+        SparseMatrix res = new SparseMatrix(row, col);
+        return res;
+    }
 }

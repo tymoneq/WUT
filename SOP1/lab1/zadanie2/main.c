@@ -87,6 +87,9 @@ void print_dir(struct node* head, int fd, int depth, char* extension) {
     dir = opendir(head->dir_name);
     if (dir == NULL) {
       perror("Error opening dir");
+      next = head->next;
+      free(head);
+      head = next;
       continue;
     }
     list_dir(dir, fd, depth, extension, head->dir_name);

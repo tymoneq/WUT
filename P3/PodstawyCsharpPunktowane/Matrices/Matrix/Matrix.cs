@@ -22,9 +22,9 @@ public abstract class Matrix
     {
         StringBuilder sb = new StringBuilder();
 
-        for (int row = 0; row <= Rows; row++)
+        for (int row = 0; row < Rows; row++)
         {
-            for (int col = 0; col <= Columns; col++)
+            for (int col = 0; col < Columns; col++)
             {
                 sb.AppendFormat($"{this[row, col]}");
             }
@@ -39,5 +39,9 @@ public abstract class Matrix
     {
         return row >= 0 && row < Rows && col >= 0 && col < Columns;
     }
+
+    public abstract void Identity();
+    public abstract Matrix Transpose();
+    public abstract float Norm();
 
 }

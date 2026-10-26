@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #define REQUIREMENTS "requirements"
@@ -71,7 +72,11 @@ void create_package_file(char* file_path) {
     ERR("Creating package file");
   }
 
-  write(fd, "adhfha", 6);
+  char random_data[10];
+  for (int i = 0; i < 10; i++) {
+    random_data[i] = 'A' + (rand() % 26);
+  }
+  write(fd, random_data, 10);
 
   close(fd);
 }
@@ -86,6 +91,7 @@ void install_to_envs(struct node* head, const char* package_name) {
   strcpy(package_name_copy, package_name);
 
   char* res = strtok(package_name_copy, "=");
+  char* version = strtok(NULL, "=");
 
   while (cur != NULL) {
     snprintf(full_path, sizeof(full_path), "%s/%s", cur->env_name,
@@ -93,7 +99,6 @@ void install_to_envs(struct node* head, const char* package_name) {
 
     FILE* fptr = fopen(full_path, "r");
     if (fptr == NULL) {
-      fclose(fptr);
       ERR("ENV doesn't exist");
     }
 
@@ -106,9 +111,9 @@ void install_to_envs(struct node* head, const char* package_name) {
       snprintf(full_path, sizeof(full_path), "%s/%s", cur->env_name,
                REQUIREMENTS);
 
-      FILE* fptr = fopen(full_path, "a+");
+      FILE* fptr = fopen(full_path, "a");
       if (fptr) {
-        fprintf(fptr, "%s\n", package_name);
+        fprintf(fptr, "%s %s\n", package_name, version);
         fclose(fptr);
       }
     } else {
@@ -126,9 +131,10 @@ void remove_file(char* file_path) {
   }
 }
 void remove_package(FILE* fptr, FILE* ftemp, char* package) {
-  char buf[128];
-  while (fscanf(fptr, "%s", buf) == 1) {
-    if (strstr(buf, package) != 0) {
+  char buf[256];
+  while (fgets(buf, sizeof(buf), fptr) != NULL) {
+    if (strncmp(buf, package, strlen(package)) == 0 &&
+        buf[strlen(package)] == ' ') {
     } else {
       fprintf(ftemp, "%s\n", buf);
     }
@@ -152,7 +158,6 @@ void remove_from_envs(struct node* head, const char* package_name) {
 
     FILE* fptr = fopen(full_path, "r");
     if (fptr == NULL) {
-      fclose(fptr);
       ERR("ENV doesn't exist");
     }
 
@@ -167,7 +172,7 @@ void remove_from_envs(struct node* head, const char* package_name) {
       snprintf(full_path, sizeof(full_path), "%s/%s", cur->env_name,
                REQUIREMENTS);
 
-      FILE* fptr = fopen(full_path, "rw+");
+      FILE* fptr = fopen(full_path, "r");
 
       snprintf(temp_file, sizeof(temp_file), "%s/%s", cur->env_name, "tmp");
       FILE* ftmp = fopen(temp_file, "w");
@@ -196,6 +201,7 @@ void remove_from_envs(struct node* head, const char* package_name) {
 
 int main(int argc, char* argv[]) {
   int c;
+  srand(time(NULL));
   char* env_name = NULL;
   int install_flag = 0;
   char* package_name = NULL;

@@ -11,6 +11,10 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+#define AUTHOR "author"
+#define TITLE "title"
+#define GENRE "genre"
+
 #define ERR(source)                                                \
   (perror(source), fprintf(stderr, "%s:%d\n", __FILE__, __LINE__), \
    exit(EXIT_FAILURE))
@@ -42,15 +46,81 @@ void usage(int argc, char** argv) {
   exit(EXIT_FAILURE);
 }
 
+void print_file_data(FILE* fptr) {
+  char* line = NULL;
+  char line_copy[1024];
+  size_t len = 0;
+  ssize_t nread;
+  char* author = NULL;
+  char* title = NULL;
+  char* genre = NULL;
 
+  char* key;
+  char* val;
 
+  while ((nread = getline(&line, &len, fptr)) != -1) {
+    strcpy(line_copy, line);
+
+    key = strtok(line_copy, ":");
+    val = strtok(NULL, ":");
+
+    if (strcmp(key, AUTHOR) == 0) {
+      author = (char*)malloc(strlen(val) + 1);
+      strcpy(author, val);
+    } else if (strcmp(key, TITLE) == 0) {
+      title = (char*)malloc(strlen(val) + 1);
+      strcpy(title, val);
+    } else if (strcmp(key, GENRE) == 0) {
+      genre = (char*)malloc(strlen(val) + 1);
+      strcpy(genre, val);
+    }
+  }
+
+  printf("author: ");
+  if (author) {
+    printf("%s", author);
+    free(author);
+  } else {
+    printf("unknown\n");
+  }
+
+  printf("title: ");
+  if (title) {
+    printf("%s", title);
+    free(title);
+  } else {
+    printf("unknown\n");
+  }
+
+  printf("genre: ");
+  if (genre) {
+    printf("%s", genre);
+    free(genre);
+  } else {
+    printf("unknown\n");
+  }
+
+  if (line)
+    free(line);
+}
+
+void read_data_from_file(char* file) {
+  FILE* fptr = fopen(file, "r");
+  if (fptr == NULL) {
+    ERR("Error while opening a file");
+  }
+  print_file_data(fptr);
+
+  fclose(fptr);
+}
 
 int main(int argc, char** argv) {
-  if (argc != 1) {
+  if (argc != 2) {
     usage(argc, argv);
   }
 
   char* file = argv[1];
+  read_data_from_file(file);
 
   return 0;
 }

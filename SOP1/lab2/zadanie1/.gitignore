@@ -1,3 +1,5 @@
 main
 *.in
 *out
+mmap
+a.txt

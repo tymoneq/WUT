@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -63,20 +64,66 @@ int open_babcia(const char* tower) {
     ERR(error_message);
   }
 
-  ssize_t read_bytes = 0;
-  char read_buf[128];
-  while ((read_bytes = read(fd, read_buf, LINE_SIZE)) > 0) {
-    int num = (read_buf[0] - '0') * 10 + read_buf[1] - '0';
-    // if (num < 0 || num > 31) {
-    //   continue;
-    // }
-    write(0, &read_buf, LINE_SIZE);
+  return fd;
+}
+
+void proces_line(char* line_buf, ssize_t line_len, int recipe_fd) {
+  if (line_len < 3 || !isdigit((unsigned char)line_buf[0]) ||
+      !isdigit((unsigned char)line_buf[1]) || line_buf[2] != ':') {
+    fprintf(stderr, "Babcia się zagadała: %s\n", line_buf);
+    return;
   }
-  if (read_bytes < 0) {
-    ERR("Error when reading from babcia");
+  char line_num_buf[3];
+  line_num_buf[2] = '\0';
+  memcpy(line_num_buf, line_buf, 2);
+  int line_num = (line_buf[0] - '0') * 10 + line_buf[1] - '0';
+  if (line_num < 0 || line_num > 31) {
+    fprintf(stderr, "Babcia się zagadała: %s\n", line_buf);
+    return;
   }
 
-  return fd;
+  size_t content_len = line_len - 3;
+  if (content_len > LINE_SIZE - 1) {
+    content_len = LINE_SIZE - 1;
+  }
+
+  char write_buf[LINE_SIZE];
+  memset(write_buf, ' ', LINE_SIZE);
+  memcpy(write_buf, line_buf + 3, content_len);
+  write_buf[LINE_SIZE - 1] = '\n';
+
+  off_t offset = line_num * LINE_SIZE;
+
+  if (lseek(recipe_fd, offset, SEEK_SET) == -1) {
+    ERR("Error when doing lseek");
+  }
+  if (write(recipe_fd, write_buf, LINE_SIZE) == -1) {
+    ERR("Error writing recipe");
+  }
+  printf("Krok %s zapisany\n", line_num_buf);
+}
+
+void read_babcia(int babcia_fd, int recipe_fd) {
+  char read_buf[128];
+  char line_buf[512];
+  size_t line_len = 0;
+  ssize_t bytes_read;
+
+  while ((bytes_read = read(babcia_fd, read_buf, sizeof(read_buf))) > 0) {
+    for (ssize_t i = 0; i < bytes_read; i++) {
+      if (read_buf[i] == '\n') {
+        line_buf[line_len] = '\0';
+        proces_line(line_buf, line_len, recipe_fd);
+        line_len = 0;
+      } else if (line_len < sizeof(line_buf) - 1 && read_buf[i] != '\0') {
+        line_buf[line_len++] = read_buf[i];
+      }
+    }
+  }
+  if (line_len > 0) {
+    line_buf[line_len] = '\0';
+    fprintf(stderr, "Babcia się zagadała: %s\n", line_buf);
+  }
 }
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -86,6 +133,8 @@ int main(int argc, char* argv[]) {
   int fd = open_recipe(argv[1]);
 
   int fd_babcia = open_babcia(argv[2]);
+
+  read_babcia(fd_babcia, fd);
 
   if (fd > 0)
     close(fd);

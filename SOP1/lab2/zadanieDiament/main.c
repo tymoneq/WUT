@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +15,14 @@
   (perror(source), fprintf(stderr, "%s:%d\n", __FILE__, __LINE__), \
    exit(EXIT_FAILURE))
 
+struct Tower {
+  char read_buf[128];
+  char line_buf[512];
+  size_t line_len;
+};
+
 void usage(char* pname) {
-  fprintf(stderr, "USAGE:%s recipe tower1 [tower 2 ...]\n", pname);
+  fprintf(stderr, "USAGE:%s recipe tower1 [tower2 ... tower5]\n", pname);
   exit(EXIT_FAILURE);
 }
 
@@ -28,13 +35,11 @@ int open_recipe(const char* file) {
     if (fd < 0) {
       ERR("ERROR opening recipe file");
     }
-    off_t currentPosition = lseek(fd, 0, SEEK_CUR);
     off_t size = lseek(fd, 0, SEEK_END);
-    lseek(fd, currentPosition, SEEK_SET);
-
     if (size != 2048) {
       ERR("Ta ksiega to nie przepis!");
     }
+    lseek(fd, 0, SEEK_SET);
 
   } else {
     char buf[LINE_SIZE];
@@ -48,12 +53,13 @@ int open_recipe(const char* file) {
         ERR("Something went wrong when writing to a file");
       }
     }
+    lseek(fd, 0, SEEK_SET);
   }
   return fd;
 }
 
 int open_babcia(const char* tower) {
-  int fd = open(tower, O_RDONLY);
+  int fd = open(tower, O_RDONLY | O_NONBLOCK);
   char error_message[256];
   snprintf(error_message, sizeof(error_message), "Nie ma babci na wieży %s",
            tower);
@@ -103,26 +109,25 @@ void proces_line(char* line_buf, ssize_t line_len, int recipe_fd) {
   printf("Krok %s zapisany\n", line_num_buf);
 }
 
-void read_babcia(int babcia_fd, int recipe_fd) {
-  char read_buf[128];
-  char line_buf[512];
-  size_t line_len = 0;
+void read_babcia(int babcia_fd, int recipe_fd, struct Tower* tower) {
   ssize_t bytes_read;
 
-  while ((bytes_read = read(babcia_fd, read_buf, sizeof(read_buf))) > 0) {
+  while ((bytes_read =
+              read(babcia_fd, tower->read_buf, sizeof(tower->read_buf))) > 0) {
     for (ssize_t i = 0; i < bytes_read; i++) {
-      if (read_buf[i] == '\n') {
-        line_buf[line_len] = '\0';
-        proces_line(line_buf, line_len, recipe_fd);
-        line_len = 0;
-      } else if (line_len < sizeof(line_buf) - 1 && read_buf[i] != '\0') {
-        line_buf[line_len++] = read_buf[i];
+      if (tower->read_buf[i] == '\n') {
+        tower->line_buf[tower->line_len] = '\0';
+        proces_line(tower->line_buf, tower->line_len, recipe_fd);
+        tower->line_len = 0;
+      } else if (tower->line_len < sizeof(tower->line_buf) - 1 &&
+                 tower->read_buf[i] != '\0') {
+        tower->line_buf[tower->line_len++] = tower->read_buf[i];
       }
     }
   }
-  if (line_len > 0) {
-    line_buf[line_len] = '\0';
-    fprintf(stderr, "Babcia się zagadała: %s\n", line_buf);
+  if (tower->line_len > 0) {
+    tower->line_buf[tower->line_len] = '\0';
+    fprintf(stderr, "Babcia się zagadała: %s\n", tower->line_buf);
   }
 }
 int main(int argc, char* argv[]) {
@@ -132,15 +137,64 @@ int main(int argc, char* argv[]) {
 
   int fd = open_recipe(argv[1]);
 
-  int fd_babcia = open_babcia(argv[2]);
+  nfds_t babcia_count = argc - 2;
+  struct pollfd* fds =
+      (struct pollfd*)malloc(sizeof(struct pollfd) * babcia_count);
 
-  read_babcia(fd_babcia, fd);
+  if (fds == NULL) {
+    ERR("Error when malloc memory for fds");
+  }
+
+  struct Tower* towers =
+      (struct Tower*)malloc(sizeof(struct Tower) * babcia_count);
+
+  if (towers == NULL)
+    ERR("Error malloc towers");
+  for (unsigned int i = 0; i < babcia_count; i++) {
+    fds[i].fd = open_babcia(argv[2 + i]);
+    fds[i].events = POLLIN;
+    fds[i].revents = 0;
+    towers[i].line_len = 0;
+  }
+
+  unsigned int active_towers = babcia_count;
+  while (active_towers > 0) {
+    int ready = poll(fds, babcia_count, 3000);
+
+    if (ready == -1) {
+      ERR("poll");
+    }
+    if (ready == 0) {
+      printf("Babcie dolewają herbatki…\n");
+      continue;
+    }
+
+    for (unsigned int i = 0; i < babcia_count; i++) {
+      if (fds[i].fd < 0)
+        continue;
+      if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        close(fds[i].fd);
+        fds[i].fd = -1;
+        active_towers--;
+        continue;
+      }
+      if (!(fds[i].revents & POLLIN))
+        continue;
+      read_babcia(fds[i].fd, fd, &towers[i]);
+    }
+  }
 
   if (fd > 0)
     close(fd);
+  for (unsigned int i = 0; i < babcia_count; i++)
+    if (fds[i].fd > 0)
+      close(fds[i].fd);
 
-  if (fd_babcia > 0)
-    close(fd_babcia);
+  if (towers)
+    free(towers);
+
+  if (fds)
+    free(fds);
 
   return 0;
 }

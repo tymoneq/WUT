@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -130,6 +131,62 @@ void read_babcia(int babcia_fd, int recipe_fd, struct Tower* tower) {
     fprintf(stderr, "Babcia się zagadała: %s\n", tower->line_buf);
   }
 }
+
+void replace_berries(int recipe_fd) {
+  const size_t file_size = 2048;
+  const char* oldword = "raw~berries";
+  const char* newword = "raspberries";
+  const size_t word_len = 11;
+  int empty_lines = 0;
+  int swap_counter = 0;
+
+  char* map =
+      mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, recipe_fd, 0);
+  if (map == MAP_FAILED) {
+    ERR("map failed");
+  }
+
+  for (size_t i = 0; i < file_size - word_len; i++) {
+    if (memcmp(oldword, map + i, word_len) == 0) {
+      memcpy(map + i, newword, word_len);
+      swap_counter++;
+      i += word_len - 1;
+    }
+  }
+  char print_buf[LINE_SIZE + 4];
+  print_buf[2] = ':';
+  print_buf[LINE_SIZE + 3] = '\0';
+
+  for (size_t i = 0; i < NUM_OF_LINES; i++) {
+    int offset = i * LINE_SIZE;
+    if (strncmp(map + offset, " ", 1) == 0) {
+      empty_lines++;
+      continue;
+    }
+    print_buf[0] = i / 10 + '0';
+    print_buf[1] = i % 10 + '0' + 1;
+
+    memcpy(print_buf + 3, map + offset, LINE_SIZE);
+    for (int j = sizeof(print_buf) - 2; j >= 0; j--) {
+      if (print_buf[j] != ' ' && print_buf[j] != '\n') {
+        print_buf[j + 1] = '\0';
+        break;
+      }
+    }
+
+    printf("%s\n", print_buf);
+  }
+
+  printf("Brudy księżniczki Joanny wyczyszczone: %d\n", swap_counter);
+  if (empty_lines > 0) {
+    printf("Brakuje %d kroków, tort sie zapadnie!\n", empty_lines);
+  } else {
+    printf("Tort gotowy!\n");
+  }
+
+  munmap(map, file_size);
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     usage(argv[0]);
@@ -183,6 +240,8 @@ int main(int argc, char* argv[]) {
       read_babcia(fds[i].fd, fd, &towers[i]);
     }
   }
+
+  replace_berries(fd);
 
   if (fd > 0)
     close(fd);

@@ -197,7 +197,7 @@ Dictionary<K, V, Capacity> operator+(const Dictionary<K, V, Capacity> &d1,
       auto value = d.get(entry->key);
       if (!value.has_value())
         d.insert(entry->key, entry->value);
-      entry = entry->next;
+      entry = entry->next;`
     }
   }
 

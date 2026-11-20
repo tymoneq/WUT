@@ -1,4 +1,4 @@
-﻿//#define TASK04
+﻿#define TASK04
 using FluentAssertions;
 using tasks;
 

@@ -30,7 +30,17 @@ public static class DatabaseQueries
         var ratings = movieDatabase.Ratings;
         var casts = movieDatabase.Casts;
 
-        var queryResult = new object();
+        var queryResult = casts
+            .Join(movies.Where(m => m.Genre == Genre.Fantasy),
+                cast => cast.MovieId,
+                movie => movie.Id,
+                (cast, movie) => cast.ActorId)
+            .Distinct()
+            .Join(actors,
+                actorId => actorId,
+                actor => actor.Id,
+                (actorId, actor) => actor)
+            .ToList();
 
         Console.WriteLine("Actors From Fantasy Movies");
         DisplayQueryResults(queryResult);
@@ -44,7 +54,11 @@ public static class DatabaseQueries
         var ratings = movieDatabase.Ratings;
         var casts = movieDatabase.Casts;
 
-        var queryResult = new object();
+        var queryResult = movies.GroupBy(m => m.Genre).Select(group => new
+        {
+            Genre = group.Key,
+            Movie = group.MaxBy(movie => movie.DurationMinutes)
+        }).ToList();
 
         Console.WriteLine("Longest Movie By Genre");
         DisplayQueryResults(queryResult);
@@ -58,8 +72,32 @@ public static class DatabaseQueries
         var ratings = movieDatabase.Ratings;
         var casts = movieDatabase.Casts;
 
-        var queryResult = new object();
+        var queryResult = ratings.GroupBy(r => r.MovieId)
+        .Select(g => new
+        {
+            MovieId = g.Key,
+            Average = g.Average(r => r.Score)
 
+        }).Where(g => g.Average > 8).
+        Join(movies, rating => rating.MovieId, movie => movie.Id, (rating, movie) => new
+        {
+            Movie = movie,
+            rating.Average
+
+        }).GroupJoin(casts, movie => movie.Movie.Id, cast => cast.MovieId, (movie, movieCasts) => new
+        {
+            movie.Movie,
+            CastIds = movieCasts.Select(c => c.ActorId),
+            movie.Average
+        }).Select(
+            x => new
+            {
+                x.Movie,
+                x.Average,
+                Cast = x.CastIds.Join(actors, actorId => actorId,
+                          actor => actor.Id, (actorId, actor) => actor).ToList()
+            }
+        ).ToList();
         Console.WriteLine("High Rated Movies With Cast");
         DisplayQueryResults(queryResult);
         Console.WriteLine();

@@ -78,7 +78,7 @@ public class ArrayBinaryTree<T> : IArrayBinaryTree<T>
 
     private void EnsureCapacityForIndex(int index)
     {
-        if (_present.Length < index)
+        if (_present.Length > index)
             return;
 
         var new_size = _present.Length == 0 ? 1 : _present.Length * 2;

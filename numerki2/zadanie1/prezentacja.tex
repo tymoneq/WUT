@@ -112,8 +112,6 @@
 % SLAJD 3: Opis matematyczny -- złożona kwadratura Gaussa-Legendre'a
 % =========================================================================
 \begin{frame}{Złożona 2-punktowa kwadratura Gaussa-Legendre'a}
-  \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
       \begin{block}{Podział obszaru i kwadratura bazowa}
         Kwadrat $[-1, 1]^2$ dzielimy na $n_1 \times n_2$ podprostokątów $[a_i, b_i] \times [c_j, d_j]$ o długościach boków $h_u = \frac{2}{n_1}$, $h_v = \frac{2}{n_2}$.
 
@@ -127,15 +125,16 @@
           u_{i,k} = \frac{b_i - a_i}{2}\,t_k + \frac{a_i + b_i}{2}.
         \]
       \end{block}
-    \end{column}
-    \begin{column}{0.44\textwidth}
+\end{frame}
+\begin{frame}{Złożona 2-punktowa kwadratura Gaussa-Legendre'a cd}
       \begin{block}{Wzór kwadratury złożonej}
         Sumując wkłady ze wszystkich $n_1 \cdot n_2$ podobszarów ($4 n_1 n_2$ punktów węzłowych):
         \[
           Q_{n_1,n_2}(f) = \frac{1}{n_1 n_2} \sum_{i=0}^{n_1-1}\sum_{j=0}^{n_2-1}\sum_{k=1}^{2}\sum_{l=1}^{2} w_k w_l\, g(u_{i,k}, v_{j,l}).
         \]
       \end{block}
-
+\end{frame}
+\begin{frame}{Złożona 2-punktowa kwadratura Gaussa-Legendre'a cd}
       \begin{exampleblock}{Najważniejsze własności metody}
         \begin{itemize}
           \item \textbf{Rząd dokładności algebraicznej:} $2p - 1 = 3$ względem każdej zmiennej $u$ i $v$.
@@ -146,16 +145,14 @@
           \item Podwojenie siatki ($n \to 2n$) zmniejsza błąd ok. $2^4 = 16$-krotnie.
         \end{itemize}
       \end{exampleblock}
-    \end{column}
-  \end{columns}
+
 \end{frame}
 
 % =========================================================================
 % SLAJD 4: Architektura programu obliczeniowego i skryptów testowych
 % =========================================================================
 \begin{frame}{Struktura modułowa programu w środowisku MATLAB}
-  \begin{columns}[T]
-    \begin{column}{0.50\textwidth}
+
       \begin{block}{Funkcja główna i funkcje pomocnicze}
         \begin{itemize}
           \item \texttt{P1\_z36\_Tumialis\_344959(f, n1, n2)} -- główny algorytm całkowania (domyślnie $n_1 = n_2 = 10$, obsługa \texttt{nargin}).
@@ -166,8 +163,8 @@
           \item \texttt{to\_polar}, \texttt{to\_cartesian} -- transformacja współrzędnych $(u,v) \to (r,\alpha) \to (x,y)$.
         \end{itemize}
       \end{block}
-    \end{column}
-    \begin{column}{0.46\textwidth}
+\end{frame}
+\begin{frame}{Struktura modułowa programu w środowisku MATLAB}
       \begin{block}{Zestaw skryptów testowych}
         \begin{itemize}
           \item \texttt{test\_P1\_z36.m} -- bezargumentowy program testujący poprawność implementacji:
@@ -179,8 +176,7 @@
           \item \texttt{test\_gladkosc.m} -- eksperyment badający wpływ klasy gładkości funkcji podcałkowej na tempo zbieżności.
         \end{itemize}
       \end{block}
-    \end{column}
-  \end{columns}
+
 \end{frame}
 
 % =========================================================================

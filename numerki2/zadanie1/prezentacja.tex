@@ -41,10 +41,10 @@
   \begin{beamercolorbox}[wd=.38\paperwidth,ht=2.4ex,dp=1ex,leftskip=2ex]{palette primary}%
     \usebeamerfont{author in head/foot}Tymon Tumialis (344959)
   \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.44\paperwidth,ht=2.4ex,dp=1ex,center]{palette secondary}%
+  \begin{beamercolorbox}[wd=.40\paperwidth,ht=2.4ex,dp=1ex,center]{palette secondary}%
     \usebeamerfont{title in head/foot}Projekt 1, Zadanie 36 -- Kwadratura Gaussa-Legendre'a
   \end{beamercolorbox}%
-  \begin{beamercolorbox}[wd=.18\paperwidth,ht=2.4ex,dp=1ex,rightskip=2ex]{palette primary}%
+  \begin{beamercolorbox}[wd=.22\paperwidth,ht=2.4ex,dp=1ex,rightskip=2ex]{palette primary}%
     \raggedleft\usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
   \end{beamercolorbox}}%
   \vskip0pt%
@@ -151,20 +151,7 @@
 % =========================================================================
 % SLAJD 4: Architektura programu obliczeniowego i skryptów testowych
 % =========================================================================
-\begin{frame}{Struktura modułowa programu w środowisku MATLAB}
-
-      \begin{block}{Funkcja główna i funkcje pomocnicze}
-        \begin{itemize}
-          \item \texttt{P1\_z36\_Tumialis\_344959(f, n1, n2)} -- główny algorytm całkowania (domyślnie $n_1 = n_2 = 10$, obsługa \texttt{nargin}).
-          \item \texttt{get\_base\_nodes()} -- zwraca wagi $w_k = 1$ oraz węzły $t_{1,2} = \pm 1/\sqrt{3}$.
-          \item \texttt{calc\_interval\_pos(...)} -- wyznacza końce podprzedziałów siatki.
-          \item \texttt{rescale\_interval(a, b, t)} -- przekształca węzły bazowe na $[a, b]$.
-          \item \texttt{calc\_jacobian(u)} -- oblicza czynnik $J(u) = \frac{\pi(u+1)}{4}$.
-          \item \texttt{to\_polar}, \texttt{to\_cartesian} -- transformacja współrzędnych $(u,v) \to (r,\alpha) \to (x,y)$.
-        \end{itemize}
-      \end{block}
-\end{frame}
-\begin{frame}{Struktura modułowa programu w środowisku MATLAB}
+\begin{frame}{Struktura testów}
       \begin{block}{Zestaw skryptów testowych}
         \begin{itemize}
           \item \texttt{test\_P1\_z36.m} -- bezargumentowy program testujący poprawność implementacji:
@@ -193,9 +180,9 @@
       \toprule
       \textbf{Test} & \textbf{Funkcja $f(x,y)$} & \textbf{Siatka} & \textbf{Wartość dokładna $I(f)$} & \textbf{Własność weryfikowana} \\
       \midrule
-      Test 1 & $f(x,y) = 1$ & $10 \times 10$ & $\pi \approx 3{,}141592653589793$ & Pole koła ($\text{st.}_u = 1 \le 3$, wynik dokładny) \\
-      Test 2 & $f(x,y) = x^2 + y^2$ & $10 \times 10$ & $\frac{\pi}{2} \approx 1{,}570796326794897$ & Symetria radialna ($\text{st.}_u = 3 \le 3$, dokładny) \\
-      Test 3 & $f(x,y) = x^2$ & $10 \times 10$ & $\frac{\pi}{4} \approx 0{,}785398163397448$ & Całkowanie funkcji trygonometrycznej $\cos^2\alpha$ \\
+      Test 1 & $f(x,y) = 1$ & $10 \times 10$ & $\pi \approx 3{,}141592653589793$ & Pole koła \\
+      Test 2 & $f(x,y) = x^2 + y^2$ & $10 \times 10$ & $\frac{\pi}{2} \approx 1{,}570796326794897$ & Symetria radialna \\
+      Test 3 & $f(x,y) = x^2$ & $10 \times 10$ & $\frac{\pi}{4} \approx 0{,}785398163397448$ & Funkcja trygonometryczna \\
       Test 4 & $f(x,y) = x$ & $10 \times 10$ & $0{,}000000000000000$ & Zachowanie antysymetrii (wynik $\approx 0$) \\
       Test 5 & $f(x,y) = (x^2+y^2)^2$ & $1^2 \dots 64^2$ & $\frac{\pi}{3} \approx 1{,}047197551196598$ & Zbieżność rzędu $\mathcal{O}(h^4)$ ($\text{st.}_u = 5 > 3$) \\
       \bottomrule
@@ -218,23 +205,25 @@
   \]
 
   \begin{table}
-    \centering
-    \small
-    \begin{tabular}{@{} c c c l @{}}
-      \toprule
-      \textbf{Wykładnik $m$} & \textbf{Stopień $g_m(u)$ ($2m+1$)} & \textbf{Wartość dokładna $\frac{\pi}{m+1}$} & \textbf{Zachowanie błędu bezwzględnego} \\
-      \midrule
-      \rowcolor{RowHighlight}
-      $m = 0$ & $1 \le 3$ & $\pi$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
-      \rowcolor{RowHighlight}
-      $m = 1$ & $3 \le 3$ & $\pi / 2$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
-      $m = 2$ & $5 > 3$ & $\pi / 3$ & Błąd na $1 \times 1$, szybka zbieżność $\mathcal{O}(h^4)$ dla $n = 2 \dots 100$ \\
-      $m = 3$ & $7 > 3$ & $\pi / 4$ & Przekroczenie progu dokładności; błąd zanika dla siatki $100 \times 100$ \\
-      $m = 4 \dots 10$ & $9 \dots 21 > 3$ & $\pi/5 \dots \pi/11$ & Błąd rośnie ze stopniem $m$ na $1\times 1$, red. do zera maszynowego dla $100^2$ \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
-
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{} c c c >{\raggedright\arraybackslash}p{6.2cm} @{}}
+    \toprule
+    \textbf{Wykładnik $m$} & \textbf{Stopień $g_m(u)$} & \textbf{Wartość dokładna} & \textbf{Zachowanie błędu bezwzględnego} \\
+    \midrule
+    \rowcolor{RowHighlight}
+    $m = 0$ & $1 \le 3$ & $\pi$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
+    \rowcolor{RowHighlight}
+    $m = 1$ & $3 \le 3$ & $\pi / 2$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
+    $m = 2$ & $5 > 3$ & $\pi / 3$ & Błąd na $1 \times 1$, szybka zbieżność $\mathcal{O}(h^4)$ dla $n = 2 \dots 100$ \\
+    $m = 3$ & $7 > 3$ & $\pi / 4$ & Przekroczenie progu dokładności; błąd zanika dla siatki $100 \times 100$ \\
+    $m = 4 \dots 10$ & $9 \dots 21 > 3$ & $\pi/5 \dots \pi/11$ & Błąd rośnie ze stopniem $m$ na $1\times 1$, red. do zera maszynowego dla $100^2$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+\end{frame}
+\begin{frame}{Eksperyment 1: Badanie stopnia dokładności (\texttt{test\_stopnie\_wielomianow.m})}
   \begin{exampleblock}{Potwierdzenie teorii}
     Eksperyment jednoznacznie wyznacza granicę dokładności kwadratury 2-punktowej między $m = 1$ ($\deg_u = 3$) a $m = 2$ ($\deg_u = 5$), potwierdzając poprawną implementację węzłów Gaussa-Legendre'a.
   \end{exampleblock}
@@ -247,25 +236,28 @@
   Porównanie błędu względem siatki referencyjnej $150 \times 150$ dla siatek $n \times n$ ($n \in \{2, 4, 8, 16, 32\}$):
 
   \vspace{0.15cm}
-  \begin{table}
-    \centering
-    \small
-    \begin{tabular}{@{} l l l l @{}}
-      \toprule
-      \textbf{Funkcja testowa $f(x,y)$} & \textbf{Klasa regularności} & \textbf{Postać w $(u, v)$} & \textbf{Obserwowany rząd zbieżności} \\
-      \midrule
-      $(x^2 + y^2)^2$ & Gładka ($C^\infty$) & Wielomian st. 5 w $u$ & Pełny rząd $\mathcal{O}(h^4)$ \\
-      $e^{x+y}$, $\sin(x)\cos(y)$ & Gładka ($C^\infty$) & Funkcje analityczne & Pełny rząd $\mathcal{O}(h^4)$ \\
-      $\dfrac{1}{x^2 + y^2 + 7}$ & Gładka ($C^\infty$) & Brak biegunów w $D$ & Pełny rząd $\mathcal{O}(h^4)$ \\
-      \midrule
-      \rowcolor{RowHighlight}
-      $\sqrt{x^2 + y^2} = r$ & Ostrze w $(0,0)$ & $\frac{\pi}{8}(u+1)^2$ (gładka!) & \textbf{Dokładna ($\mathcal{O}(h^4)$) -- regularyzacja przez $J(u)$} \\
-      $|x| + |y|$ & Załamania na osiach & $r(|\cos\alpha|+|\sin\alpha|)$ & Obniżony do $\mathcal{O}(h^2)$ (nieciągłość pochodnej w $v$) \\
-      $(x^2 + y^2)^{1/3} = r^{2/3}$ & Osobliwa pochodna & $\propto (u+1)^{5/3}$ przy $u=-1$ & Spowolniona zbieżność ułamkowa \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
+\begin{table}
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{} l l l >{\raggedright\arraybackslash}p{4.5cm} @{}}
+    \toprule
+    \textbf{Funkcja testowa $f(x,y)$} & \textbf{Klasa regularności} & \textbf{Postać w $(u, v)$} & \textbf{Obserwowany rząd zbieżności} \\
+    \midrule
+    $(x^2 + y^2)^2$ & Gładka ($C^\infty$) & Wielomian st. 5 w $u$ & Pełny rząd $\mathcal{O}(h^4)$ \\
+    $e^{x+y}$, $\sin(x)\cos(y)$ & Gładka ($C^\infty$) & Funkcje analityczne & Pełny rząd $\mathcal{O}(h^4)$ \\
+    $\dfrac{1}{x^2 + y^2 + 7}$ & Gładka ($C^\infty$) & Brak biegunów w $D$ & Pełny rząd $\mathcal{O}(h^4)$ \\
+    \midrule
+    \rowcolor{RowHighlight}
+    $\sqrt{x^2 + y^2} = r$ & Ostrze w $(0,0)$ & $\frac{\pi}{8}(u+1)^2$ (gładka!) & \textbf{Dokładna ($\mathcal{O}(h^4)$) -- regularyzacja przez $J(u)$} \\
+    $|x| + |y|$ & Załamania na osiach & $r(|\cos\alpha|+|\sin\alpha|)$ & Obniżony do $\mathcal{O}(h^2)$ (nieciągłość pochodnej w $v$) \\
+    $(x^2 + y^2)^{1/3} = r^{2/3}$ & Osobliwa pochodna & $\propto (u+1)^{5/3}$ przy $u=-1$ & Spowolniona zbieżność ułamkowa \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
+\end{frame}
+\begin{frame}{Eksperyment 2: Wpływ gładkości funkcji na zbieżność (\texttt{test\_gladkosc.m})}
   \begin{block}{Wniosek z eksperymentu}
     Transformacja biegunowa z jakobianem $J(u) \propto (u+1)$ naturalnie wygładza stożkowe osobliwości w środku koła ($\sqrt{x^2+y^2}$), natomiast załamania funkcji względem kąta $\alpha$ ($|x|+|y|$) obniżają rząd zbieżności z $4$ do $2$.
   \end{block}
@@ -307,54 +299,57 @@
 % SLAJD 9: Wyniki numeryczne z CUDA (Tabela wyników)
 % =========================================================================
 \begin{frame}{Wyniki dokładności numerycznej w CUDA (siatka $4096 \times 4096$, $67\,108\,864$ pkt)}
-  \begin{table}
-    \centering
-    \scriptsize
-    \begin{tabular}{@{} l c c c c @{}}
-      \toprule
-      \textbf{Funkcja $f(x,y)$} & \textbf{\texttt{slow} (global atomic)} & \textbf{\texttt{fast} (global atomic)} & \textbf{\texttt{reduction + atomic}} & \textbf{\texttt{reduction w/o atomic}} \\
-      \midrule
-      $f(x,y) = 1$ & $3{,}1415926535905720$ & $3{,}1415926535918128$ & $3{,}1415926535897731$ & \cellcolor{RowHighlight}$\mathbf{3{,}1415926535897927}$ \\
-      \textit{\scriptsize (dokł. $\pi = 3{,}1415926535897931$)} & \textit{\scriptsize błąd: $7{,}79 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $2{,}02 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $2{,}00 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
-      \midrule
-      $f(x,y) = x^2 + y^2$ & $1{,}5707963267676912$ & $1{,}5707963267900984$ & $1{,}5707963267947929$ & \cellcolor{RowHighlight}$\mathbf{1{,}5707963267948963}$ \\
-      \textit{\scriptsize (dokł. $\frac{\pi}{2} = 1{,}5707963267948966$)} & \textit{\scriptsize błąd: $2{,}72 \cdot 10^{-11}$} & \textit{\scriptsize błąd: $4{,}80 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $1{,}04 \cdot 10^{-13}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
-      \midrule
-      $f(x,y) = x^2$ & $0{,}7853981633970579$ & $0{,}7853981633972509$ & $0{,}7853981633974449$ & \cellcolor{RowHighlight}$\mathbf{0{,}7853981633974482}$ \\
-      \textit{\scriptsize (dokł. $\frac{\pi}{4} = 0{,}7853981633974483$)} & \textit{\scriptsize błąd: $3{,}90 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $1{,}97 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $3{,}40 \cdot 10^{-15}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
-      \midrule
-      $f(x,y) = x$ & $-3{,}0 \cdot 10^{-16}$ & $-6{,}0 \cdot 10^{-16}$ & $\approx 0$ & \cellcolor{RowHighlight}$\mathbf{\approx 0}$ \\
-      \midrule
-      $f(x,y) = (x^2+y^2)^2$ & $1{,}0471975511979974$ & $1{,}0471975511955576$ & $1{,}0471975511965057$ & \cellcolor{RowHighlight}$\mathbf{1{,}0471975511965974}$ \\
-      \textit{\scriptsize (dokł. $\frac{\pi}{3} = 1{,}0471975511965976$)} & \textit{\scriptsize błąd: $1{,}40 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $1{,}04 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $9{,}19 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{\scriptsize błąd: $2{,}22 \cdot 10^{-16}$ (zero masz.)} \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
+ \begin{table}
+  \centering
+  \scriptsize
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{@{} l *{4}{>{\centering\arraybackslash}p{2.45cm}} @{}}
+    \toprule
+    \textbf{Funkcja $f(x,y)$} & \textbf{\texttt{slow} (global atomic)} & \textbf{\texttt{fast} (global atomic)} & \textbf{\texttt{reduction + atomic}} & \textbf{\texttt{reduction w/o atomic}} \\
+    \midrule
+    $f(x,y) = 1$ & $3{,}1415926535905720$ & $3{,}1415926535918128$ & $3{,}1415926535897731$ & \cellcolor{RowHighlight}$\mathbf{3{,}1415926535897927}$ \\
+    \textit{(dokł. $\pi = 3{,}1415926535897931$)} & \textit{błąd: $7{,}79 \cdot 10^{-13}$} & \textit{błąd: $2{,}02 \cdot 10^{-12}$} & \textit{błąd: $2{,}00 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{$\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+    \midrule
+    $f(x,y) = x^2 + y^2$ & $1{,}5707963267676912$ & $1{,}5707963267900984$ & $1{,}5707963267947929$ & \cellcolor{RowHighlight}$\mathbf{1{,}5707963267948963}$ \\
+    \textit{(dokł. $\frac{\pi}{2} = 1{,}5707963267948966$)} & \textit{błąd: $2{,}72 \cdot 10^{-11}$} & \textit{błąd: $4{,}80 \cdot 10^{-12}$} & \textit{błąd: $1{,}04 \cdot 10^{-13}$} & \cellcolor{RowHighlight}\textit{$\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+    \midrule
+    $f(x,y) = x^2$ & $0{,}7853981633970579$ & $0{,}7853981633972509$ & $0{,}7853981633974449$ & \cellcolor{RowHighlight}$\mathbf{0{,}7853981633974482}$ \\
+    \textit{(dokł. $\frac{\pi}{4} = 0{,}7853981633974483$)} & \textit{błąd: $3{,}90 \cdot 10^{-13}$} & \textit{błąd: $1{,}97 \cdot 10^{-13}$} & \textit{błąd: $3{,}40 \cdot 10^{-15}$} & \cellcolor{RowHighlight}\textit{$\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+    \midrule
+    $f(x,y) = x$ & $-3{,}0 \cdot 10^{-16}$ & $-6{,}0 \cdot 10^{-16}$ & $\approx 0$ & \cellcolor{RowHighlight}$\mathbf{\approx 0}$ \\
+    \midrule
+    $f(x,y) = (x^2+y^2)^2$ & $1{,}0471975511979974$ & $1{,}0471975511955576$ & $1{,}0471975511965057$ & \cellcolor{RowHighlight}$\mathbf{1{,}0471975511965974}$ \\
+    \textit{(dokł. $\frac{\pi}{3} = 1{,}0471975511965976$)} & \textit{błąd: $1{,}40 \cdot 10^{-12}$} & \textit{błąd: $1{,}04 \cdot 10^{-12}$} & \textit{błąd: $9{,}19 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{błąd: $2{,}22 \cdot 10^{-16}$ (zero masz.)} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 \end{frame}
 
 % =========================================================================
 % SLAJD 10: Wnioski z eksperymentów CUDA jako tabela porównawcza
 % =========================================================================
 \begin{frame}{Wnioski z implementacji GPU (CUDA) -- zestawienie porównawcze}
-  \begin{table}
-    \centering
-    \footnotesize
-    \begin{tabular}{@{} p{2.7cm} c c c p{4.6cm} @{}}
-      \toprule
-      \textbf{Wariant kernela} & \textbf{Liczba \texttt{atomicAdd}} & \textbf{Propagacja błędu} & \textbf{Determinizm} & \textbf{Główny wniosek inżynierski} \\
-      \midrule
-      \texttt{slow} ($2\times 2$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Silne zjawisko absorpcji (\textit{swamping}); błąd rośnie wraz z gęstością siatki (do $\sim 10^{-11}$). \\
-      \midrule
-      \texttt{fast} ($16\times 16$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Szybsze wykonanie dzięki pełnym blokom, ale identyczna degradacja mantysy przez globalny \texttt{atomicAdd}. \\
-      \midrule
-      \texttt{reduction with atomic} ($16\times 16$) & $\frac{n_1 n_2}{256}$ ($2{,}6 \cdot 10^5$) & $\mathcal{O}(\log_2 B + \frac{N}{B})$ & Nie & $256\times$ mniej operacji atomowych (wykonywanych w L2 cache); świetny kompromis szybkości i precyzji ($\sim 10^{-14}$). \\
-      \midrule
-      \rowcolor{RowHighlight}
-      \texttt{reduction without atomic} & \textbf{0} & $\mathbf{\mathcal{O}(\log_2 N)}$ & \textbf{Tak (100\%)} & \textbf{Sumowanie wyrazów o zbliżonym rzędzie wielkości eliminuje \textit{swamping} -- pełne 16 cyfr precyzji \texttt{double}.} \\
-      \bottomrule
-    \end{tabular}
-  \end{table}
-
+\begin{table}
+  \centering
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{@{} >{\raggedright\arraybackslash}p{2.2cm} c c c >{\raggedright\arraybackslash}p{4.1cm} @{}}
+    \toprule
+    \textbf{Wariant kernela} & \textbf{Liczba \texttt{atomicAdd}} & \textbf{Propagacja błędu} & \textbf{Determinizm} & \textbf{Główny wniosek inżynierski} \\
+    \midrule
+    \texttt{slow} ($2\times 2$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Silne zjawisko absorpcji (\textit{swamping}); błąd rośnie wraz z gęstością siatki (do $\sim 10^{-11}$). \\
+    \midrule
+    \texttt{fast} ($16\times 16$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Szybsze wykonanie dzięki pełnym blokom, ale identyczna degradacja mantysy przez globalny \texttt{atomicAdd}. \\
+    \midrule
+    \texttt{reduction with atomic} ($16\times 16$) & $\frac{n_1 n_2}{256}$ ($2{,}6 \cdot 10^5$) & $\mathcal{O}(\log_2 B + \frac{N}{B})$ & Nie & $256\times$ mniej operacji atomowych (wykonywanych w L2 cache); świetny kompromis szybkości i precyzji ($\sim 10^{-14}$). \\
+    \midrule
+    \rowcolor{RowHighlight}
+    \texttt{reduction without atomic} & \textbf{0} & $\mathbf{\mathcal{O}(\log_2 N)}$ & \textbf{Tak (100\%)} & \textbf{Sumowanie wyrazów o zbliżonym rzędzie wielkości eliminuje \textit{swamping} -- pełne 16 cyfr precyzji \texttt{double}.} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+\end{frame}
+\begin{frame}{Wnioski z implementacji GPU (CUDA) -- zestawienie porównawcze}
   \vspace{0.15cm}
   \begin{block}{Wyjaśnienie zjawiska absorpcji (\textit{swamping}) w IEEE-754}
     Dla siatki $4096 \times 4096$ pojedynczy wkład wątku jest rzędu $\sim 10^{-8}$, podczas gdy suma globalna osiąga $\sim 1$. Wyrównanie wykładników przed dodaniem obcina ok. 27 najmłodszych bitów mantysy. Redukcja drzewiasta łączy liczby o podobnej skali i redukuje głębokość zaokrągleń z $6{,}7 \cdot 10^7$ do $\log_2(N) \approx 26$.

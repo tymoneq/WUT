@@ -1,0 +1,381 @@
+\documentclass[aspectratio=169, 10pt, xcolor={table}]{beamer}
+
+\usepackage{fontspec}
+\usepackage[polish, english, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{polish}
+\babelfont{rm}{Noto Sans}
+\babelfont{sf}{Noto Sans}
+\babelfont{tt}{Noto Sans Mono}
+
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+
+% Paleta kolorów prezentacji
+\definecolor{NavyPrimary}{RGB}{22, 52, 94}
+\definecolor{TealAccent}{RGB}{15, 118, 110}
+\definecolor{SoftBg}{RGB}{243, 246, 250}
+\definecolor{RowHighlight}{RGB}{230, 244, 238}
+\definecolor{AlertRed}{RGB}{165, 36, 34}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\setbeamercolor{structure}{fg=NavyPrimary}
+\setbeamercolor{palette primary}{bg=NavyPrimary, fg=white}
+\setbeamercolor{palette secondary}{bg=TealAccent, fg=white}
+\setbeamercolor{palette tertiary}{bg=NavyPrimary, fg=white}
+\setbeamercolor{title}{bg=NavyPrimary, fg=white}
+\setbeamercolor{frametitle}{bg=NavyPrimary, fg=white}
+\setbeamercolor{block title}{bg=NavyPrimary, fg=white}
+\setbeamercolor{block body}{bg=SoftBg, fg=black}
+\setbeamercolor{block title example}{bg=TealAccent, fg=white}
+\setbeamercolor{block body example}{bg=RowHighlight, fg=black}
+\setbeamercolor{block title alerted}{bg=AlertRed, fg=white}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.38\paperwidth,ht=2.4ex,dp=1ex,leftskip=2ex]{palette primary}%
+    \usebeamerfont{author in head/foot}Tymon Tumialis (344959)
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.44\paperwidth,ht=2.4ex,dp=1ex,center]{palette secondary}%
+    \usebeamerfont{title in head/foot}Projekt 1, Zadanie 36 -- Kwadratura Gaussa-Legendre'a
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.18\paperwidth,ht=2.4ex,dp=1ex,rightskip=2ex]{palette primary}%
+    \raggedleft\usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\title[Projekt 1, Zadanie 36]{Całkowanie podwójne na kole jednostkowym metodą złożonych 2-punktowych kwadratur Gaussa-Legendre'a}
+\subtitle{Laboratorium Projektowe z Metod Numerycznych -- Projekt 1, Zadanie 36}
+\author[Tymon Tumialis]{Tymon Tumialis, nr indeksu: 344959 \\ \small Grupa: 31B, Termin zajęć: Piątek 16:15}
+\date{}
+
+\begin{document}
+% =========================================================================
+% SLAJD 1: Strona tytułowa + samodzielnie zapisana treść zadania
+% =========================================================================
+\begin{frame}
+  \titlepage
+  \vspace{-2.cm}
+  \begin{block}{Treść zadania 36}
+    Obliczanie całek podwójnych
+    \[
+      \iint_{D} f(x,y)\,dx\,dy, \qquad D = \left\{(x,y) \in \mathbb{R}^2 : x^2 + y^2 \le 1\right\},
+    \]
+    poprzez transformację obszaru całkowania $D$ na kwadrat $[-1, 1] \times [-1, 1]$ oraz zastosowanie złożonych 2-punktowych kwadratur Gaussa-Legendre'a ze względu na każdą zmienną.
+  \end{block}
+\end{frame}
+
+% =========================================================================
+% SLAJD 2: Opis matematyczny metody -- transformacja i jakobian
+% =========================================================================
+\begin{frame}{Opis matematyczny: transformacja koła $D$ na kwadrat $[-1,1]^2$}
+      \begin{block}{1. Parametryzacja biegunowa}
+        Koło jednostkowe $D$ opisujemy we współrzędnych biegunowych $(r, \alpha) \in [0, 1] \times [0, 2\pi]$:
+        \[
+          x = r\cos\alpha, \qquad y = r\sin\alpha.
+        \]
+        Następnie odwzorowujemy liniowo przedziały $[0,1]$ oraz $[0,2\pi]$ na kwadrat standardowy $(u,v) \in [-1,1]^2$:
+        \[
+          r(u) = \frac{u + 1}{2}, \qquad \alpha(v) = \pi(v + 1).
+        \]
+      \end{block}
+\end{frame}
+\begin{frame}{Opis matematyczny: transformacja koła $D$ na kwadrat $[-1,1]^2$ cd}
+      \begin{block}{2. Jakobian przekształcenia}
+        Wyznacznik macierzy Jacobiego złożenia odwzorowań $(u,v) \mapsto (r,\alpha) \mapsto (x,y)$ wynosi:
+        \[
+          J(u,v) = \left|\frac{\partial(x,y)}{\partial(u,v)}\right|
+          = r(u)\,\frac{dr}{du}\,\frac{d\alpha}{dv}
+          = \frac{u+1}{2} \cdot \frac{1}{2} \cdot \pi
+          = \frac{\pi(u+1)}{4}.
+        \]
+        Całka na kole $D$ sprowadza się do całki po kwadracie:
+        \[
+          \iint_D f(x,y)\,dx\,dy = \int_{-1}^{1}\!\int_{-1}^{1} g(u,v)\,du\,dv,
+        \]
+        gdzie $g(u,v) = f\big(x(u,v),\, y(u,v)\big)\,\dfrac{\pi(u+1)}{4}$.
+      \end{block}
+\end{frame}
+\begin{frame}{Opis matematyczny: transformacja koła $D$ na kwadrat $[-1,1]^2$ cd}
+  \vspace{0.25cm}
+  \begin{exampleblock}{Własność regularyzująca transformacji}
+    Jakobian $J(u) = \frac{\pi(u+1)}{4}$ zeruje się dla $u = -1$ ($r = 0$), co usuwa osobliwości pochodnych funkcji radialnych w środku koła (np. $f(x,y) = \sqrt{x^2+y^2} = r$ po przemnożeniu przez $J(u)$ staje się gładkim wielomianem stopnia $2$).
+  \end{exampleblock}
+\end{frame}
+
+% =========================================================================
+% SLAJD 3: Opis matematyczny -- złożona kwadratura Gaussa-Legendre'a
+% =========================================================================
+\begin{frame}{Złożona 2-punktowa kwadratura Gaussa-Legendre'a}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{block}{Podział obszaru i kwadratura bazowa}
+        Kwadrat $[-1, 1]^2$ dzielimy na $n_1 \times n_2$ podprostokątów $[a_i, b_i] \times [c_j, d_j]$ o długościach boków $h_u = \frac{2}{n_1}$, $h_v = \frac{2}{n_2}$.
+
+        \vspace{0.15cm}
+        Węzły i wagi 2-punktowej kwadratury Gaussa-Legendre'a na $[-1, 1]$ ($p = 2$):
+        \[
+          t_{1,2} = \pm\frac{1}{\sqrt{3}}, \qquad w_1 = w_2 = 1.
+        \]
+        Przeskalowanie węzła $t_k$ na podprzedział $[a_i, b_i]$:
+        \[
+          u_{i,k} = \frac{b_i - a_i}{2}\,t_k + \frac{a_i + b_i}{2}.
+        \]
+      \end{block}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Wzór kwadratury złożonej}
+        Sumując wkłady ze wszystkich $n_1 \cdot n_2$ podobszarów ($4 n_1 n_2$ punktów węzłowych):
+        \[
+          Q_{n_1,n_2}(f) = \frac{1}{n_1 n_2} \sum_{i=0}^{n_1-1}\sum_{j=0}^{n_2-1}\sum_{k=1}^{2}\sum_{l=1}^{2} w_k w_l\, g(u_{i,k}, v_{j,l}).
+        \]
+      \end{block}
+
+      \begin{exampleblock}{Najważniejsze własności metody}
+        \begin{itemize}
+          \item \textbf{Rząd dokładności algebraicznej:} $2p - 1 = 3$ względem każdej zmiennej $u$ i $v$.
+          \item \textbf{Rząd zbieżności:} dla $g \in C^4([-1,1]^2)$ błąd wyraża się wzorem
+          \[
+            |I(f) - Q_{n_1,n_2}(f)| = \mathcal{O}\!\left(h_u^4 + h_v^4\right).
+          \]
+          \item Podwojenie siatki ($n \to 2n$) zmniejsza błąd ok. $2^4 = 16$-krotnie.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =========================================================================
+% SLAJD 4: Architektura programu obliczeniowego i skryptów testowych
+% =========================================================================
+\begin{frame}{Struktura modułowa programu w środowisku MATLAB}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \begin{block}{Funkcja główna i funkcje pomocnicze}
+        \begin{itemize}
+          \item \texttt{P1\_z36\_Tumialis\_344959(f, n1, n2)} -- główny algorytm całkowania (domyślnie $n_1 = n_2 = 10$, obsługa \texttt{nargin}).
+          \item \texttt{get\_base\_nodes()} -- zwraca wagi $w_k = 1$ oraz węzły $t_{1,2} = \pm 1/\sqrt{3}$.
+          \item \texttt{calc\_interval\_pos(...)} -- wyznacza końce podprzedziałów siatki.
+          \item \texttt{rescale\_interval(a, b, t)} -- przekształca węzły bazowe na $[a, b]$.
+          \item \texttt{calc\_jacobian(u)} -- oblicza czynnik $J(u) = \frac{\pi(u+1)}{4}$.
+          \item \texttt{to\_polar}, \texttt{to\_cartesian} -- transformacja współrzędnych $(u,v) \to (r,\alpha) \to (x,y)$.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Zestaw skryptów testowych}
+        \begin{itemize}
+          \item \texttt{test\_P1\_z36.m} -- bezargumentowy program testujący poprawność implementacji:
+          \begin{itemize}
+            \item stronicowanie wyjścia ($\le 21$ wierszy na ekran),
+            \item prezentacja opisów, wartości dokładnych oraz wyliczonych bez automatycznej oceny.
+          \end{itemize}
+          \item \texttt{test\_stopnie\_wielomianow.m} -- eksperyment badający algebraiczną dokładność kwadratury dla wielomianów $(x^2+y^2)^m$.
+          \item \texttt{test\_gladkosc.m} -- eksperyment badający wpływ klasy gładkości funkcji podcałkowej na tempo zbieżności.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =========================================================================
+% SLAJD 5: Testy poprawności programu (test_P1_z36.m)
+% =========================================================================
+\begin{frame}{Testy poprawności programu (\texttt{test\_P1\_z36.m})}
+  Weryfikacja przeprowadzona na pięciu funkcjach o znanych całkach analitycznych (siatka $10 \times 10$ dla testów 1--4 oraz badanie zbieżności w teście 5):
+
+  \vspace{0.2cm}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{@{} l l c c l @{}}
+      \toprule
+      \textbf{Test} & \textbf{Funkcja $f(x,y)$} & \textbf{Siatka} & \textbf{Wartość dokładna $I(f)$} & \textbf{Własność weryfikowana} \\
+      \midrule
+      Test 1 & $f(x,y) = 1$ & $10 \times 10$ & $\pi \approx 3{,}141592653589793$ & Pole koła ($\text{st.}_u = 1 \le 3$, wynik dokładny) \\
+      Test 2 & $f(x,y) = x^2 + y^2$ & $10 \times 10$ & $\frac{\pi}{2} \approx 1{,}570796326794897$ & Symetria radialna ($\text{st.}_u = 3 \le 3$, dokładny) \\
+      Test 3 & $f(x,y) = x^2$ & $10 \times 10$ & $\frac{\pi}{4} \approx 0{,}785398163397448$ & Całkowanie funkcji trygonometrycznej $\cos^2\alpha$ \\
+      Test 4 & $f(x,y) = x$ & $10 \times 10$ & $0{,}000000000000000$ & Zachowanie antysymetrii (wynik $\approx 0$) \\
+      Test 5 & $f(x,y) = (x^2+y^2)^2$ & $1^2 \dots 64^2$ & $\frac{\pi}{3} \approx 1{,}047197551196598$ & Zbieżność rzędu $\mathcal{O}(h^4)$ ($\text{st.}_u = 5 > 3$) \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \vspace{0.15cm}
+  \begin{block}{Wniosek z testów poprawności}
+    Dla wielomianów stopnia $\le 3$ względem zmiennej $u$ program osiąga dokładność bliską zeru maszynowemu ($\sim 10^{-16}$), natomiast dla wielomianów wyższego stopnia błąd maleje zgodnie z rzędem $\mathcal{O}(h^4)$ wraz ze wzrostem liczby podprzedziałów.
+  \end{block}
+\end{frame}
+
+% =========================================================================
+% SLAJD 6: Eksperyment numeryczny 1 -- stopień dokładności wielomianów
+% =========================================================================
+\begin{frame}{Eksperyment 1: Badanie stopnia dokładności (\texttt{test\_stopnie\_wielomianow.m})}
+  Rozważamy rodzinę funkcji $f_m(x,y) = (x^2 + y^2)^m = r^{2m}$ dla $m = 0, 1, \dots, 10$, dla których:
+  \[
+    I(f_m) = \frac{\pi}{m + 1}, \qquad g_m(u) = f_m\big(r(u)\big)J(u) = \frac{\pi}{4 \cdot 2^{2m}}(u+1)^{2m+1} \implies \deg_u(g_m) = 2m + 1.
+  \]
+
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{@{} c c c l @{}}
+      \toprule
+      \textbf{Wykładnik $m$} & \textbf{Stopień $g_m(u)$ ($2m+1$)} & \textbf{Wartość dokładna $\frac{\pi}{m+1}$} & \textbf{Zachowanie błędu bezwzględnego} \\
+      \midrule
+      \rowcolor{RowHighlight}
+      $m = 0$ & $1 \le 3$ & $\pi$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
+      \rowcolor{RowHighlight}
+      $m = 1$ & $3 \le 3$ & $\pi / 2$ & \textbf{Zero maszynowe ($\sim 10^{-16}$) już dla siatki $1 \times 1$} \\
+      $m = 2$ & $5 > 3$ & $\pi / 3$ & Błąd na $1 \times 1$, szybka zbieżność $\mathcal{O}(h^4)$ dla $n = 2 \dots 100$ \\
+      $m = 3$ & $7 > 3$ & $\pi / 4$ & Przekroczenie progu dokładności; błąd zanika dla siatki $100 \times 100$ \\
+      $m = 4 \dots 10$ & $9 \dots 21 > 3$ & $\pi/5 \dots \pi/11$ & Błąd rośnie ze stopniem $m$ na $1\times 1$, red. do zera maszynowego dla $100^2$ \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \begin{exampleblock}{Potwierdzenie teorii}
+    Eksperyment jednoznacznie wyznacza granicę dokładności kwadratury 2-punktowej między $m = 1$ ($\deg_u = 3$) a $m = 2$ ($\deg_u = 5$), potwierdzając poprawną implementację węzłów Gaussa-Legendre'a.
+  \end{exampleblock}
+\end{frame}
+
+% =========================================================================
+% SLAJD 7: Eksperyment numeryczny 2 -- wpływ gładkości funkcji
+% =========================================================================
+\begin{frame}{Eksperyment 2: Wpływ gładkości funkcji na zbieżność (\texttt{test\_gladkosc.m})}
+  Porównanie błędu względem siatki referencyjnej $150 \times 150$ dla siatek $n \times n$ ($n \in \{2, 4, 8, 16, 32\}$):
+
+  \vspace{0.15cm}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{@{} l l l l @{}}
+      \toprule
+      \textbf{Funkcja testowa $f(x,y)$} & \textbf{Klasa regularności} & \textbf{Postać w $(u, v)$} & \textbf{Obserwowany rząd zbieżności} \\
+      \midrule
+      $(x^2 + y^2)^2$ & Gładka ($C^\infty$) & Wielomian st. 5 w $u$ & Pełny rząd $\mathcal{O}(h^4)$ \\
+      $e^{x+y}$, $\sin(x)\cos(y)$ & Gładka ($C^\infty$) & Funkcje analityczne & Pełny rząd $\mathcal{O}(h^4)$ \\
+      $\dfrac{1}{x^2 + y^2 + 7}$ & Gładka ($C^\infty$) & Brak biegunów w $D$ & Pełny rząd $\mathcal{O}(h^4)$ \\
+      \midrule
+      \rowcolor{RowHighlight}
+      $\sqrt{x^2 + y^2} = r$ & Ostrze w $(0,0)$ & $\frac{\pi}{8}(u+1)^2$ (gładka!) & \textbf{Dokładna ($\mathcal{O}(h^4)$) -- regularyzacja przez $J(u)$} \\
+      $|x| + |y|$ & Załamania na osiach & $r(|\cos\alpha|+|\sin\alpha|)$ & Obniżony do $\mathcal{O}(h^2)$ (nieciągłość pochodnej w $v$) \\
+      $(x^2 + y^2)^{1/3} = r^{2/3}$ & Osobliwa pochodna & $\propto (u+1)^{5/3}$ przy $u=-1$ & Spowolniona zbieżność ułamkowa \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \begin{block}{Wniosek z eksperymentu}
+    Transformacja biegunowa z jakobianem $J(u) \propto (u+1)$ naturalnie wygładza stożkowe osobliwości w środku koła ($\sqrt{x^2+y^2}$), natomiast załamania funkcji względem kąta $\alpha$ ($|x|+|y|$) obniżają rząd zbieżności z $4$ do $2$.
+  \end{block}
+\end{frame}
+
+% =========================================================================
+% SLAJD 8: Wyjście poza ramy zadania -- implementacja GPU w CUDA C++
+% =========================================================================
+\begin{frame}{Rozszerzenie zadania: Równoległa implementacja GPU w CUDA C++}
+  Ponieważ obliczanie kwadratury złożonej na siatce $n_1 \times n_2$ składa się z $4 n_1 n_2$ niezależnych ewaluacji funkcji podcałkowej, zaimplementowano cztery warianty kerneli CUDA pracujące w podwójnej precyzji (\texttt{double}):
+
+  \vspace{0.15cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Warianty z bezpośrednim \texttt{atomicAdd}}
+        \begin{itemize}
+          \item \textbf{\texttt{slow}} (bloki $2 \times 2$): każdy podobszar to osobny blok; każdy z 4 wątków wykonuje globalny \texttt{atomicAdd} do akumulatora sumy.
+          \item \textbf{\texttt{fast}} (bloki $16 \times 16$): lepsze wykorzystanie jednostek SM na GPU, lecz nadal każdy z $4 n_1 n_2$ wątków wywołuje globalny \texttt{atomicAdd}.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{exampleblock}{Warianty z redukcją hierarchiczną}
+        \begin{itemize}
+          \item \textbf{\texttt{reduction with atomic}}: redukcja drzewiasta w szybkiej pamięci współdzielonej (\texttt{\_\_shared\_\_}) w bloku $16 \times 16$, a następnie tylko jeden \texttt{atomicAdd} na blok ($256\times$ mniej operacji atomowych).
+          \item \textbf{\texttt{reduction without atomic}}: wieloetapowa, w pełni deterministyczna redukcja drzewiasta bez użycia instrukcji atomowych.
+        \end{itemize}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \begin{alertblock}{Problem numeryczny zbadany na GPU}
+    W arytmetyce zmiennoprzecinkowej IEEE-754 dodawanie nie jest łączne: $(a+b)+c \neq a+(b+c)$. Przetestowano wpływ niedeterministycznego sumowania do $67\,108\,864$ punktów (siatka $4096 \times 4096$) na utratę bitów mantysy.
+  \end{alertblock}
+\end{frame}
+
+% =========================================================================
+% SLAJD 9: Wyniki numeryczne z CUDA (Tabela wyników)
+% =========================================================================
+\begin{frame}{Wyniki dokładności numerycznej w CUDA (siatka $4096 \times 4096$, $67\,108\,864$ pkt)}
+  \begin{table}
+    \centering
+    \scriptsize
+    \begin{tabular}{@{} l c c c c @{}}
+      \toprule
+      \textbf{Funkcja $f(x,y)$} & \textbf{\texttt{slow} (global atomic)} & \textbf{\texttt{fast} (global atomic)} & \textbf{\texttt{reduction + atomic}} & \textbf{\texttt{reduction w/o atomic}} \\
+      \midrule
+      $f(x,y) = 1$ & $3{,}1415926535905720$ & $3{,}1415926535918128$ & $3{,}1415926535897731$ & \cellcolor{RowHighlight}$\mathbf{3{,}1415926535897927}$ \\
+      \textit{\scriptsize (dokł. $\pi = 3{,}1415926535897931$)} & \textit{\scriptsize błąd: $7{,}79 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $2{,}02 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $2{,}00 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+      \midrule
+      $f(x,y) = x^2 + y^2$ & $1{,}5707963267676912$ & $1{,}5707963267900984$ & $1{,}5707963267947929$ & \cellcolor{RowHighlight}$\mathbf{1{,}5707963267948963}$ \\
+      \textit{\scriptsize (dokł. $\frac{\pi}{2} = 1{,}5707963267948966$)} & \textit{\scriptsize błąd: $2{,}72 \cdot 10^{-11}$} & \textit{\scriptsize błąd: $4{,}80 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $1{,}04 \cdot 10^{-13}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+      \midrule
+      $f(x,y) = x^2$ & $0{,}7853981633970579$ & $0{,}7853981633972509$ & $0{,}7853981633974449$ & \cellcolor{RowHighlight}$\mathbf{0{,}7853981633974482}$ \\
+      \textit{\scriptsize (dokł. $\frac{\pi}{4} = 0{,}7853981633974483$)} & \textit{\scriptsize błąd: $3{,}90 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $1{,}97 \cdot 10^{-13}$} & \textit{\scriptsize błąd: $3{,}40 \cdot 10^{-15}$} & \cellcolor{RowHighlight}\textit{\scriptsize $\approx 0$ (identyczny dla $512^2\dots 4096^2$)} \\
+      \midrule
+      $f(x,y) = x$ & $-3{,}0 \cdot 10^{-16}$ & $-6{,}0 \cdot 10^{-16}$ & $\approx 0$ & \cellcolor{RowHighlight}$\mathbf{\approx 0}$ \\
+      \midrule
+      $f(x,y) = (x^2+y^2)^2$ & $1{,}0471975511979974$ & $1{,}0471975511955576$ & $1{,}0471975511965057$ & \cellcolor{RowHighlight}$\mathbf{1{,}0471975511965974}$ \\
+      \textit{\scriptsize (dokł. $\frac{\pi}{3} = 1{,}0471975511965976$)} & \textit{\scriptsize błąd: $1{,}40 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $1{,}04 \cdot 10^{-12}$} & \textit{\scriptsize błąd: $9{,}19 \cdot 10^{-14}$} & \cellcolor{RowHighlight}\textit{\scriptsize błąd: $2{,}22 \cdot 10^{-16}$ (zero masz.)} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+% =========================================================================
+% SLAJD 10: Wnioski z eksperymentów CUDA jako tabela porównawcza
+% =========================================================================
+\begin{frame}{Wnioski z implementacji GPU (CUDA) -- zestawienie porównawcze}
+  \begin{table}
+    \centering
+    \footnotesize
+    \begin{tabular}{@{} p{2.7cm} c c c p{4.6cm} @{}}
+      \toprule
+      \textbf{Wariant kernela} & \textbf{Liczba \texttt{atomicAdd}} & \textbf{Propagacja błędu} & \textbf{Determinizm} & \textbf{Główny wniosek inżynierski} \\
+      \midrule
+      \texttt{slow} ($2\times 2$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Silne zjawisko absorpcji (\textit{swamping}); błąd rośnie wraz z gęstością siatki (do $\sim 10^{-11}$). \\
+      \midrule
+      \texttt{fast} ($16\times 16$) & $4 n_1 n_2$ ($6{,}7 \cdot 10^7$) & $\mathcal{O}(N)$ & Nie & Szybsze wykonanie dzięki pełnym blokom, ale identyczna degradacja mantysy przez globalny \texttt{atomicAdd}. \\
+      \midrule
+      \texttt{reduction with atomic} ($16\times 16$) & $\frac{n_1 n_2}{256}$ ($2{,}6 \cdot 10^5$) & $\mathcal{O}(\log_2 B + \frac{N}{B})$ & Nie & $256\times$ mniej operacji atomowych (wykonywanych w L2 cache); świetny kompromis szybkości i precyzji ($\sim 10^{-14}$). \\
+      \midrule
+      \rowcolor{RowHighlight}
+      \texttt{reduction without atomic} & \textbf{0} & $\mathbf{\mathcal{O}(\log_2 N)}$ & \textbf{Tak (100\%)} & \textbf{Sumowanie wyrazów o zbliżonym rzędzie wielkości eliminuje \textit{swamping} -- pełne 16 cyfr precyzji \texttt{double}.} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \vspace{0.15cm}
+  \begin{block}{Wyjaśnienie zjawiska absorpcji (\textit{swamping}) w IEEE-754}
+    Dla siatki $4096 \times 4096$ pojedynczy wkład wątku jest rzędu $\sim 10^{-8}$, podczas gdy suma globalna osiąga $\sim 1$. Wyrównanie wykładników przed dodaniem obcina ok. 27 najmłodszych bitów mantysy. Redukcja drzewiasta łączy liczby o podobnej skali i redukuje głębokość zaokrągleń z $6{,}7 \cdot 10^7$ do $\log_2(N) \approx 26$.
+  \end{block}
+\end{frame}
+
+% =========================================================================
+% SLAJD 11: Podsumowanie końcowe
+% =========================================================================
+\begin{frame}{Podsumowanie projektu}
+  \begin{block}{Najważniejsze wnioski}
+    \begin{enumerate}
+      \item \textbf{Poprawność transformacji:} Przejście do współrzędnych biegunowych z jakobianem $J(u) = \frac{\pi(u+1)}{4}$ pozwala sprowadzić całkowanie po kole jednostkowym do kwadratu $[-1,1]^2$ i naturalnie regularyzuje osobliwości stożkowe w początku układu.
+      \item \textbf{Własności kwadratury Gaussa-Legendre'a:} Złożona reguła 2-punktowa jest dokładna dla wielomianów stopnia $\le 3$ względem każdej zmiennej i osiąga rząd zbieżności $\mathcal{O}(h^4)$ dla funkcji gładkich.
+      \item \textbf{Znaczenie kolejności sumowania (CUDA):} W obliczeniach równoległych na dużą skalę bezpośrednie sumowanie atomowe prowadzi do utraty precyzji przez brak łączności arytmetyki IEEE-754. Zastosowanie redukcji drzewiastej przywraca pełną dokładność 64-bitową i determinizm wyników.
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\end{document}

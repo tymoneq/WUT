@@ -10,7 +10,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#define MAX_FIFOS 5
+#define MAX_FIFOS 4
 #define BATCH_BYTES 10
 #define TIMEOUT 100
 
@@ -118,11 +118,10 @@ void h_action(struct node* current, struct node* head, int fd) {
   }
   free(iov);
 }
-void run(int fd, struct node* head) {
-  set_nonblocking(0);
-  struct pollfd fds[2] = {{0, POLLIN, 0}};
-  nfds_t num_of_descriptors = 1;
-
+void run(int fd,
+         struct node* head,
+         struct pollfd* fds,
+         nfds_t num_of_descriptors) {
   off_t smbox_size = get_file_size(fd);
 
   char intput_buf[BATCH_BYTES];
@@ -137,98 +136,102 @@ void run(int fd, struct node* head) {
     if (ret == 0) {
       continue;
     }
-    if (!(fds[0].revents & POLLIN)) {
-      continue;
-    }
-    int read_bytes = read(0, intput_buf, BATCH_BYTES);
-
-    if (read_bytes == -1) {
-      if (errno == EINTR || errno == EAGAIN)
+    for (nfds_t j = 0; j < num_of_descriptors; j++) {
+      if (!(fds[j].revents & POLLIN)) {
         continue;
-      ERR("read");
-    }
-    if (read_bytes == 0)
-      break;
+      }
+      if (fds[j].fd < 0)
+        continue;
+      int read_bytes = read(fds[j].fd, intput_buf, BATCH_BYTES);
 
-    for (int i = 0; i < read_bytes; i++) {
-      switch (intput_buf[i]) {
-        case 'w': {
-          if (current->prev != NULL) {
-            current = current->prev;
-            h_action(current, head, fd);
-          }
-
-          break;
-        }
-        case 's': {
-          if (current->next != NULL) {
-            current = current->next;
-            h_action(current, head, fd);
-          }
-
-          break;
-        }
-        case 'd': {
-          fflush(NULL);
-          char* mem = mmap(NULL, smbox_size, PROT_READ | PROT_WRITE,
-                           MAP_PRIVATE, fd, 0);
-
-          if (mem == MAP_FAILED) {
-            ERR("mmap");
-          }
-
-          int wrote_bytes = 0;
-          int write_size = 0;
-          while (wrote_bytes < smbox_size) {
-            if (wrote_bytes + BATCH_BYTES <= smbox_size) {
-              write_size = BATCH_BYTES;
-            } else {
-              write_size = smbox_size - wrote_bytes;
-            }
-            int code = write(1, mem + wrote_bytes, write_size);
-            if (code == -1) {
-              ERR("write");
-            }
-            wrote_bytes += code;
-          }
-
-          munmap(mem, smbox_size);
-          fflush(NULL);
-          break;
-        }
-        case 'h': {
-          h_action(current, head, fd);
-          break;
-        }
-        case 'm': {
-          fflush(NULL);
-          struct iovec iov[4] = {
-              {current->header, current->header_size - 1},
-              {"\n", 1},
-              {current->message, current->message_size - 1},
-              {"\n", 1},
-          };
-          if (writev(STDOUT_FILENO, iov, 4) < 0) {
-            ERR("writev");
-          }
-          fflush(NULL);
-          break;
-        }
-        case 'q': {
-          if (fd > 0)
-            close(fd);
-          free_list(head);
-          exit(0);
-        }
-        case '\n': {
+      if (read_bytes == -1) {
+        if (errno == EINTR || errno == EAGAIN)
           continue;
-        }
-        default: {
-          printf("Invalid input\n");
+        ERR("read");
+      }
+      if (read_bytes == 0)
+        break;
+
+      for (int i = 0; i < read_bytes; i++) {
+        switch (intput_buf[i]) {
+          case 'w': {
+            if (current->prev != NULL) {
+              current = current->prev;
+              h_action(current, head, fd);
+            }
+
+            break;
+          }
+          case 's': {
+            if (current->next != NULL) {
+              current = current->next;
+              h_action(current, head, fd);
+            }
+
+            break;
+          }
+          case 'd': {
+            fflush(NULL);
+            char* mem = mmap(NULL, smbox_size, PROT_READ | PROT_WRITE,
+                             MAP_PRIVATE, fd, 0);
+
+            if (mem == MAP_FAILED) {
+              ERR("mmap");
+            }
+
+            int wrote_bytes = 0;
+            int write_size = 0;
+            while (wrote_bytes < smbox_size) {
+              if (wrote_bytes + BATCH_BYTES <= smbox_size) {
+                write_size = BATCH_BYTES;
+              } else {
+                write_size = smbox_size - wrote_bytes;
+              }
+              int code = write(1, mem + wrote_bytes, write_size);
+              if (code == -1) {
+                ERR("write");
+              }
+              wrote_bytes += code;
+            }
+
+            munmap(mem, smbox_size);
+            fflush(NULL);
+            break;
+          }
+          case 'h': {
+            h_action(current, head, fd);
+            break;
+          }
+          case 'm': {
+            fflush(NULL);
+            struct iovec iov[4] = {
+                {current->header, current->header_size - 1},
+                {"\n", 1},
+                {current->message, current->message_size - 1},
+                {"\n", 1},
+            };
+            if (writev(STDOUT_FILENO, iov, 4) < 0) {
+              ERR("writev");
+            }
+            fflush(NULL);
+            break;
+          }
+          case 'q': {
+            if (fd > 0)
+              close(fd);
+            free_list(head);
+            exit(0);
+          }
+          case '\n': {
+            continue;
+          }
+          default: {
+            printf("Invalid input\n");
+          }
         }
       }
+      fflush(NULL);
     }
-    fflush(NULL);
   }
 }
 
@@ -272,6 +275,25 @@ int main(int argc, char* argv[]) {
   if (argc < 2) {
     usage(argv[0]);
   }
+  set_nonblocking(0);
+
+  struct pollfd* fds =
+      (struct pollfd*)malloc(sizeof(struct pollfd) * (MAX_FIFOS + 1));
+  nfds_t num_of_descriptors = 1;
+  fds[0].fd = 0;
+  fds[0].events = POLLIN;
+  fds[0].revents = 0;
+  for (int i = 2; i < argc && i - 2 < MAX_FIFOS; i++) {
+    int fifo_fd = open(argv[i], O_RDONLY | O_NONBLOCK);
+    if (fifo_fd < 0)
+      ERR("opening fifo");
+
+    fds[i - 1].fd = fifo_fd;
+    fds[i - 1].events = POLLIN;
+    fds[i - 1].revents = 0;
+
+    ++num_of_descriptors;
+  }
 
   int fd = open(argv[1], O_RDONLY);
 
@@ -289,11 +311,18 @@ int main(int argc, char* argv[]) {
   }
   head = p;
 
-  run(fd, head);
+  run(fd, head, fds, num_of_descriptors);
 
   if (fd > 0)
     close(fd);
   free_list(head);
+
+  for (nfds_t i = 0; i < num_of_descriptors; i++)
+    if (fds[i].fd > 0)
+      close(fds[i].fd);
+
+  if (fds)
+    free(fds);
 
   return 0;
 }

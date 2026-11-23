@@ -251,13 +251,16 @@ void process_file(int fd, struct node** tail) {
 
     ssize_t read_bytes = read(fd, header, header_buf[0]);
     if (read_bytes == -1 || read_bytes != header_buf[0])
-      ERR("read");
+      ERR("error parsing file header");
+
     read_bytes = read(fd, message, header_buf[1]);
     if (read_bytes == -1 || read_bytes != header_buf[1])
-      ERR("read");
+      ERR("error parsing file message");
 
-    if (header[header_buf[0] - 1] != '\0' || message[header_buf[1] - 1] != '\0')
+    if (header[header_buf[0] - 1] != '\0' ||
+        message[header_buf[1] - 1] != '\0') {
       ERR("Wrong header");
+    }
 
     *tail = add_new(*tail, header_buf[0], header_buf[1], header, message);
 

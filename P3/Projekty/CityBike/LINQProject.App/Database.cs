@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace LINQProject.APP;
 
 public enum BikeType : byte
@@ -13,7 +15,7 @@ public enum MemberType : byte
     casual,
 }
 
-public sealed class Station
+public sealed record class Station
 {
     public required string StationId;
     public required string StationName;
@@ -40,6 +42,36 @@ public sealed class Database
 {
     private readonly Dictionary<string, Station> _Station = [];
     private readonly Dictionary<string, BikeTrip> _BikeTrip = [];
+
+    private void AddStation(string? stationID, string? stationName)
+    {
+        if (stationID == null)
+            return;
+
+        if (_Station.ContainsKey(stationID))
+            return;
+
+        if (stationName == null)
+            return;
+
+        var station = new Station { StationId = stationID, StationName = stationName };
+        _Station.Add(stationID, station);
+    }
+
+    private void AddBikeTrip(string rideID, BikeTrip trip)
+    {
+        if (_BikeTrip.ContainsKey(rideID))
+        {
+            Console.WriteLine("ID already exist");
+            return;
+        }
+        _BikeTrip.Add(rideID, trip);
+    }
+
+    public void ParseNewRecord(string ? line)
+    {
+        throw new NotImplementedException();
+    }
 
 
 }

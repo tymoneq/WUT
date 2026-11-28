@@ -38,23 +38,23 @@ public sealed record class BikeTrip
 }
 
 
-public sealed class Database
+public class Database
 {
     private readonly Dictionary<string, Station> _Station = [];
     private readonly Dictionary<string, BikeTrip> _BikeTrip = [];
 
-    private void AddStation(string? stationID, string? stationName)
+    private void AddStation(Station station)
     {
+        var stationID = station.StationId;
         if (stationID == null)
             return;
 
         if (_Station.ContainsKey(stationID))
             return;
 
-        if (stationName == null)
+        if (station.StationName == null)
             return;
 
-        var station = new Station { StationId = stationID, StationName = stationName };
         _Station.Add(stationID, station);
     }
 
@@ -68,9 +68,17 @@ public sealed class Database
         _BikeTrip.Add(rideID, trip);
     }
 
-    public void ParseNewRecord(string ? line)
+    public void ParseNewRecord(string[] line)
     {
-        throw new NotImplementedException();
+        if (line == null || line.Length == 0 || line.Length != 13)
+        {
+            return;
+        }
+        var startStation = new Station { StationName = line[4], StationId = line[5] };
+        var endStation = new Station { StationName = line[6], StationId = line[7] };
+        AddStation(startStation);
+        AddStation(endStation);
+
     }
 
 
